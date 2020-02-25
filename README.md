@@ -10,7 +10,7 @@ This social triangulation zome is a basic membrane to be reused in holochain app
 * `initial_members`: initial list of friends that are allowed in the hApp.
 * `necessary_vouches`: number of friends that have to "vouch" for you to be allowed in the hApp. This must be equal or less than the number of initial members.
 2. The agents with address inside the `initial_members` join the hApp. They are automatically valid.
-3. If an agent wants to enter the hApp, the initial members have to vouch for him, using their agent address. When the agent receives a number of vouches equal or more than the `necessary_vouches`, they can install the hApp and enter the network.
+3. If an agent wants to enter the hApp, the agents that are already inside the app have to vouch for him, using their agent address. When the agent receives a number of vouches equal or more than the `necessary_vouches`, they can install the hApp and enter the network.
 4. From now on, this new agent can also vouch for other agents to enter the hApp.
 
 ## Building
