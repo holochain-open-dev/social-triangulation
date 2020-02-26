@@ -15,6 +15,8 @@ This social triangulation zome is a basic membrane to be reused in holochain app
 
 ## Building
 
+Assuming you have [nix-shell](https://developer.holochain.org/docs/install/) installed, to build the DNA, execute:
+
 ```bash
 nix shell
 hc package
