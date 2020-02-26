@@ -13,6 +13,12 @@ This social triangulation zome is a basic membrane to be reused in holochain app
 3. If an agent wants to enter the hApp, the agents that are already inside the app have to vouch for him, using their agent address. When the agent receives a number of vouches equal or more than the `necessary_vouches`, they can install the hApp and enter the network.
 4. From now on, this new agent can also vouch for other agents to enter the hApp.
 
+## Todo list
+
+* [ ] Implement tests when `tryorama` accepts DNA properties.
+* [ ] Implement UI native module
+* [ ] Publish code to `npm` and `crates.io`
+
 ## Building
 
 Assuming you have [nix-shell](https://developer.holochain.org/docs/install/) installed, to build the DNA, execute:
