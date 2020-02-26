@@ -4,6 +4,8 @@ TLDR: **"this hApp can only be joined by friends of friends"**.
 
 This social triangulation zome is a basic membrane to be reused in holochain applications. It may be useful in contexts where the application is tuned for a small number of participants that loosely know each other, or have to live nearby, etc.
 
+> This is a work in progress, not production ready. Contact us if you want to collaborate!
+
 ## Membrane workflow
 
 1. The hApp includes this zome and sets two properties in the DNA:
