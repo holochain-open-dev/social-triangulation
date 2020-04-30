@@ -7,7 +7,7 @@ import json from 'rollup-plugin-json';
 
 const pkg = require('./package.json');
 
-const libraryName = 'hc-profiles';
+const libraryName = 'hc-social-triangulation';
 
 export default {
   input: `src/${libraryName}.ts`,

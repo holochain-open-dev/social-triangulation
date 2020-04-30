@@ -1,19 +1,7 @@
 import gql from 'graphql-tag';
 
-export const SET_USERNAME = gql`
-  mutation SetUsername($username: String!) {
-    setUsername(username: $username) {
-      id
-      username
-    }
+export const VOUCH_FOR_AGENT = gql`
+  mutation VouchForAgent($agentId: ID!) {
+    vouchForAgent(agentId: $agentId)
   }
 `;
-
-export const GET_ALL_AGENTS = gql`
-  query GetAllAgents {
-    allAgents {
-      id
-      username
-    }
-  }
-`

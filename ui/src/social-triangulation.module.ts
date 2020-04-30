@@ -14,7 +14,7 @@ import { resolvers } from './graphql/resolvers';
 import { AgentList } from './elements/hcst-agent-list';
 
 export class SocialTriangulationModule extends MicroModule {
-  static id = 'holochain-social-triangulationmodule';
+  static id = 'holochain-social-triangulation-module';
 
   dependencies = [HolochainConnectionModule.id, ProfilesModule.id];
 

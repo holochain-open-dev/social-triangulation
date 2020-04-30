@@ -2,13 +2,13 @@ import { moduleConnect } from '@uprtcl/micro-orchestrator';
 import { LitElement, html, property } from 'lit-element';
 import { ApolloClient } from 'apollo-boost';
 import { ApolloClientModule } from '@uprtcl/graphql';
+import { GET_ALL_AGENTS } from 'holochain-profiles';
 
 import '@authentic/mwc-circular-progress';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 
 import { Agent } from '../types';
-import { GET_ALL_AGENTS } from 'src/graphql/queries';
 
 export class AgentList extends moduleConnect(LitElement) {
   @property({ type: Array })
