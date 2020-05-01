@@ -20,6 +20,15 @@ const socialTriangulationTypeDefs = gql `
   extend type Mutation {
     vouchForAgent(agentId: ID!): Boolean!
   }
+
+  extend type Agent {
+    numVouches: Int!
+    isInitialMember: Boolean!
+  }
+
+  extend type Query {
+    minVouches: Int!
+  }
 `;
 
 const resolvers = {
@@ -27,6 +36,28 @@ const resolvers = {
         async vouchForAgent(_, { agentId }, { container }) {
             const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
             return socialTriangulationProvider.call('vouch_for_agent', { agentId });
+        },
+    },
+    Query: {
+        async minVouches(_, __, { container }) {
+            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
+            const settings = await socialTriangulationProvider.call('get_setting', {});
+            return settings.split('Minimum_Required_Vouch:')[1];
+        },
+    },
+    Agent: {
+        async isInitialMember(parent, _, { container }) {
+            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
+            const settings = await socialTriangulationProvider.call('get_setting', {});
+            const initialMembers = settings.split('Admin_Members:')[0];
+            return initialMembers.includes(parent);
+        },
+        async numVouches(parent, _, { container }) {
+            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
+            const numVouches = await socialTriangulationProvider.call('vouch_count_for', {
+                agent_address: parent,
+            });
+            return parseInt(numVouches);
         },
     },
 };

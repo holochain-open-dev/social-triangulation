@@ -48,7 +48,7 @@ pub fn vouch_count_for_agent(agent_address: Address) -> ZomeApiResult<u8> {
     let vouch_entry = Vouch::new(agent_address).entry();
     let vouch_address = vouch_entry.address();
     if let Ok(None) = hdk::get_entry(&vouch_address) {
-        Err(ZomeApiError::from(String::from("Error in retreive data")))
+        Ok(0)
     } else {
         let option =
             GetEntryOptions::new(StatusRequestKind::Latest, true, true, Timeout::default());
