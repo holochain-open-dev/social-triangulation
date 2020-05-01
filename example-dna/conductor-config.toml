@@ -7,17 +7,17 @@ ui_interfaces = []
 id = 'hc-alice'
 keystore_file = './alice.keystore'
 name = 'alice'
-public_address = 'HcSCi7gK3Uj8QAvqjtXA8Umki95v4Jmw4FgaeETe9sq7rjsoj8AJb9MOKKrceei'
+public_address = 'HcSCjcNW9C6k8U6vofmICxgMV8e5pdmsk5aeca9ejZHvsagae8hprf6EWXyaoni'
 
 [[agents]]
 id = 'hc-bob'
 keystore_file = './bob.keystore'
 name = 'bob'
-public_address = 'HcScjQpY3tfMqtepwbwIEw7azd7Sysjoz5DZ9rc5H4ROmo93Ug943YRhrBR7jzi'
+public_address = 'HcSciGq3EHu4Dppzfr5KS8N4Bx49t5sNyayFzmWOJabs5cr5jzBQ5rsM5S68t3r'
 
 [[dnas]]
-file = '/home/hab/holo/social-triangulation/example-dna/dist/example-dna.dna.json'
-hash = 'QmaBevH1rTmC72FWkD7nJSFk8JhKuYEM4VJhVdLP6hEVFb'
+file = './dist/example-dna.dna.json'
+hash = 'QmTGLFwrDyupvjfBSpKnGQybVS56q4nZuBwQVA15Y2Y6w2'
 id = 'hc-triangulation'
 
 [[instances]]
@@ -37,7 +37,7 @@ id = 'alice-instance'
 
 [interfaces.driver]
 port = 8888
-type = 'websocket'
+type = 'http'
 
 [[instances]]
 agent = 'hc-bob'
@@ -56,7 +56,7 @@ id = 'bob-instance'
 
 [interfaces.driver]
 port = 8889
-type = 'websocket'
+type = 'http'
 
 [network]
 type = "sim2h"

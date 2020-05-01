@@ -12,9 +12,8 @@
   "dht": {},
   "properties": {
     "initial_members": [
-      "HcSCjcNW9C6k8U6vofmICxgMV8e5pdmsk5aeca9ejZHvsagae8hprf6EWXyaoni",
-      "HcSciGq3EHu4Dppzfr5KS8N4Bx49t5sNyayFzmWOJabs5cr5jzBQ5rsM5S68t3r"
+      "HcSCjcNW9C6k8U6vofmICxgMV8e5pdmsk5aeca9ejZHvsagae8hprf6EWXyaoni"
     ],
-    "necessary_vouches": 2
+    "necessary_vouches": 1
   }
 }
