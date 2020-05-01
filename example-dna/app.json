@@ -11,7 +11,10 @@
   "version": "0.1.0",
   "dht": {},
   "properties": {
-    "initial_members": ["AGENT_ID_1", "AGENT_ID_2"],
-    "necessary_vouches": 4
+    "initial_members": [
+      "HcSCjcNW9C6k8U6vofmICxgMV8e5pdmsk5aeca9ejZHvsagae8hprf6EWXyaoni",
+      "HcSciGq3EHu4Dppzfr5KS8N4Bx49t5sNyayFzmWOJabs5cr5jzBQ5rsM5S68t3r"
+    ],
+    "necessary_vouches": 2
   }
 }
