@@ -1,8 +1,9 @@
 import { HolochainConnectionModule, createHolochainProvider } from '@uprtcl/holochain-provider';
+import { ProfilesModule } from 'holochain-profiles';
 import { moduleConnect, MicroModule, i18nextModule } from '@uprtcl/micro-orchestrator';
 import { LitElement, html, property } from 'lit-element';
+import { gql as gql$1 } from 'apollo-boost';
 import { ApolloClientModule, GraphQlSchemaModule } from '@uprtcl/graphql';
-import { GET_ALL_AGENTS, ProfilesModule } from 'holochain-profiles';
 import '@authentic/mwc-circular-progress';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
@@ -49,13 +50,12 @@ const resolvers = {
         async isInitialMember(parent, _, { container }) {
             const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
             const settings = await socialTriangulationProvider.call('get_setting', {});
-            const initialMembers = settings.split('Admin_Members:')[0];
-            return initialMembers.includes(parent);
+            return settings.includes(parent.id);
         },
         async numVouches(parent, _, { container }) {
             const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
             const numVouches = await socialTriangulationProvider.call('vouch_count_for', {
-                agent_address: parent,
+                agent_address: parent.id,
             });
             return parseInt(numVouches);
         },
@@ -88,6 +88,12 @@ function __metadata(metadataKey, metadataValue) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
 }
 
+const VOUCH_FOR_AGENT = gql `
+  mutation VouchForAgent($agentId: ID!) {
+    vouchForAgent(agentId: $agentId)
+  }
+`;
+
 class AgentList extends moduleConnect(LitElement) {
     constructor() {
         super(...arguments);
@@ -96,12 +102,40 @@ class AgentList extends moduleConnect(LitElement) {
     async firstUpdated() {
         this.client = this.request(ApolloClientModule.bindings.Client);
         const result = await this.client.query({
-            query: GET_ALL_AGENTS,
+            query: gql$1 `
+        {
+          allAgents {
+            id
+            username
+            numVouches
+          }
+        }
+      `,
         });
         this.agents = result.data.allAgents;
     }
+    vouchForAgent(agentId) {
+        this.client.mutate({
+            mutation: VOUCH_FOR_AGENT,
+            variables: {
+                agentId,
+            },
+        });
+    }
     renderAgent(agent) {
-        return html `<mwc-list-item>${agent.username}</mwc-list-item>`;
+        return html `
+      <mwc-list-item twoline hasMeta>
+        <span>${agent.username}</span>
+        <span slot="secondary">${agent.id}</span>
+
+        <mwc-button
+          slot="meta"
+          label="VOUCH"
+          @click=${() => this.vouchForAgent(agent.id)}
+        ></mwc-button>
+      </mwc-list-item>
+      <li divider padded role="separator"></li>
+    `;
     }
     render() {
         if (!this.agents)
@@ -140,12 +174,6 @@ class SocialTriangulationModule extends MicroModule {
 }
 SocialTriangulationModule.id = 'holochain-social-triangulation-module';
 SocialTriangulationModule.bindings = SocialTriangulationBindings;
-
-const VOUCH_FOR_AGENT = gql `
-  mutation VouchForAgent($agentId: ID!) {
-    vouchForAgent(agentId: $agentId)
-  }
-`;
 
 export { SocialTriangulationModule, VOUCH_FOR_AGENT };
 //# sourceMappingURL=hc-social-triangulation.es5.js.map

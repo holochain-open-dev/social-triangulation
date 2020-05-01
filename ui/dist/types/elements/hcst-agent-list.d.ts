@@ -12,6 +12,7 @@ export declare class AgentList extends AgentList_base {
     agents: Agent[] | undefined;
     client: ApolloClient<any>;
     firstUpdated(): Promise<void>;
+    vouchForAgent(agentId: string): void;
     renderAgent(agent: Agent): import("lit-element").TemplateResult;
     render(): import("lit-element").TemplateResult;
 }

@@ -9,7 +9,7 @@ export const resolvers = {
         SocialTriangulationBindings.SocialTriangulationBindings
       );
 
-      return socialTriangulationProvider.call('vouch_for_agent', { agentId });
+      return socialTriangulationProvider.call('vouch_for', { agentId });
     },
   },
   Query: {
@@ -37,8 +37,7 @@ export const resolvers = {
         {}
       );
 
-      const initialMembers = settings.split('Admin_Members:')[0];
-      return initialMembers.includes(parent);
+      return settings.includes(parent.id);
     },
     async numVouches(parent, _, { container }) {
       const socialTriangulationProvider: HolochainProvider = container.get(
@@ -48,7 +47,7 @@ export const resolvers = {
       const numVouches = await socialTriangulationProvider.call(
         'vouch_count_for',
         {
-          agent_address: parent,
+          agent_address: parent.id,
         }
       );
 

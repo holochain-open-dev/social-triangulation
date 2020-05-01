@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@uprtcl/holochain-provider'), require('@uprtcl/micro-orchestrator'), require('lit-element'), require('@uprtcl/graphql'), require('holochain-profiles'), require('@authentic/mwc-circular-progress'), require('@material/mwc-list'), require('@material/mwc-list/mwc-list-item'), require('graphql-tag')) :
-  typeof define === 'function' && define.amd ? define(['exports', '@uprtcl/holochain-provider', '@uprtcl/micro-orchestrator', 'lit-element', '@uprtcl/graphql', 'holochain-profiles', '@authentic/mwc-circular-progress', '@material/mwc-list', '@material/mwc-list/mwc-list-item', 'graphql-tag'], factory) :
-  (factory((global.hcSocialTriangulation = {}),global.holochainProvider,global.microOrchestrator,global.litElement,global.graphql,global.holochainProfiles,null,null,null,global.gql));
-}(this, (function (exports,holochainProvider,microOrchestrator,litElement,graphql,holochainProfiles,mwcCircularProgress,mwcList,mwcListItem,gql) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@uprtcl/holochain-provider'), require('holochain-profiles'), require('@uprtcl/micro-orchestrator'), require('lit-element'), require('apollo-boost'), require('@uprtcl/graphql'), require('@authentic/mwc-circular-progress'), require('@material/mwc-list'), require('@material/mwc-list/mwc-list-item'), require('graphql-tag')) :
+  typeof define === 'function' && define.amd ? define(['exports', '@uprtcl/holochain-provider', 'holochain-profiles', '@uprtcl/micro-orchestrator', 'lit-element', 'apollo-boost', '@uprtcl/graphql', '@authentic/mwc-circular-progress', '@material/mwc-list', '@material/mwc-list/mwc-list-item', 'graphql-tag'], factory) :
+  (factory((global.hcSocialTriangulation = {}),global.holochainProvider,global.holochainProfiles,global.microOrchestrator,global.litElement,global.apolloBoost,global.graphql,null,null,null,global.gql));
+}(this, (function (exports,holochainProvider,holochainProfiles,microOrchestrator,litElement,apolloBoost,graphql,mwcCircularProgress,mwcList,mwcListItem,gql) { 'use strict';
 
   gql = gql && gql.hasOwnProperty('default') ? gql['default'] : gql;
 
@@ -47,13 +47,12 @@
           async isInitialMember(parent, _, { container }) {
               const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
               const settings = await socialTriangulationProvider.call('get_setting', {});
-              const initialMembers = settings.split('Admin_Members:')[0];
-              return initialMembers.includes(parent);
+              return settings.includes(parent.id);
           },
           async numVouches(parent, _, { container }) {
               const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
               const numVouches = await socialTriangulationProvider.call('vouch_count_for', {
-                  agent_address: parent,
+                  agent_address: parent.id,
               });
               return parseInt(numVouches);
           },
@@ -86,6 +85,12 @@
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
   }
 
+  const VOUCH_FOR_AGENT = gql `
+  mutation VouchForAgent($agentId: ID!) {
+    vouchForAgent(agentId: $agentId)
+  }
+`;
+
   class AgentList extends microOrchestrator.moduleConnect(litElement.LitElement) {
       constructor() {
           super(...arguments);
@@ -94,12 +99,40 @@
       async firstUpdated() {
           this.client = this.request(graphql.ApolloClientModule.bindings.Client);
           const result = await this.client.query({
-              query: holochainProfiles.GET_ALL_AGENTS,
+              query: apolloBoost.gql `
+        {
+          allAgents {
+            id
+            username
+            numVouches
+          }
+        }
+      `,
           });
           this.agents = result.data.allAgents;
       }
+      vouchForAgent(agentId) {
+          this.client.mutate({
+              mutation: VOUCH_FOR_AGENT,
+              variables: {
+                  agentId,
+              },
+          });
+      }
       renderAgent(agent) {
-          return litElement.html `<mwc-list-item>${agent.username}</mwc-list-item>`;
+          return litElement.html `
+      <mwc-list-item twoline hasMeta>
+        <span>${agent.username}</span>
+        <span slot="secondary">${agent.id}</span>
+
+        <mwc-button
+          slot="meta"
+          label="VOUCH"
+          @click=${() => this.vouchForAgent(agent.id)}
+        ></mwc-button>
+      </mwc-list-item>
+      <li divider padded role="separator"></li>
+    `;
       }
       render() {
           if (!this.agents)
@@ -138,12 +171,6 @@
   }
   SocialTriangulationModule.id = 'holochain-social-triangulation-module';
   SocialTriangulationModule.bindings = SocialTriangulationBindings;
-
-  const VOUCH_FOR_AGENT = gql `
-  mutation VouchForAgent($agentId: ID!) {
-    vouchForAgent(agentId: $agentId)
-  }
-`;
 
   exports.SocialTriangulationModule = SocialTriangulationModule;
   exports.VOUCH_FOR_AGENT = VOUCH_FOR_AGENT;

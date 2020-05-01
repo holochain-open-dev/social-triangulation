@@ -1,6 +1,6 @@
 import { moduleConnect } from '@uprtcl/micro-orchestrator';
 import { LitElement, html, property } from 'lit-element';
-import { ApolloClient } from 'apollo-boost';
+import { ApolloClient, gql } from 'apollo-boost';
 import { ApolloClientModule } from '@uprtcl/graphql';
 import { GET_ALL_AGENTS } from 'holochain-profiles';
 
@@ -9,6 +9,7 @@ import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 
 import { Agent } from '../types';
+import { VOUCH_FOR_AGENT } from 'src/graphql/queries';
 
 export class AgentList extends moduleConnect(LitElement) {
   @property({ type: Array })
@@ -20,14 +21,43 @@ export class AgentList extends moduleConnect(LitElement) {
     this.client = this.request(ApolloClientModule.bindings.Client);
 
     const result = await this.client.query({
-      query: GET_ALL_AGENTS,
+      query: gql`
+        {
+          allAgents {
+            id
+            username
+            numVouches
+          }
+        }
+      `,
     });
 
     this.agents = result.data.allAgents;
   }
 
+  vouchForAgent(agentId: string) {
+    this.client.mutate({
+      mutation: VOUCH_FOR_AGENT,
+      variables: {
+        agentId,
+      },
+    });
+  }
+
   renderAgent(agent: Agent) {
-    return html`<mwc-list-item>${agent.username}</mwc-list-item>`;
+    return html`
+      <mwc-list-item twoline hasMeta>
+        <span>${agent.username}</span>
+        <span slot="secondary">${agent.id}</span>
+
+        <mwc-button
+          slot="meta"
+          label="VOUCH"
+          @click=${() => this.vouchForAgent(agent.id)}
+        ></mwc-button>
+      </mwc-list-item>
+      <li divider padded role="separator"></li>
+    `;
   }
 
   render() {
