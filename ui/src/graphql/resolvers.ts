@@ -9,7 +9,7 @@ export const resolvers = {
         SocialTriangulationBindings.SocialTriangulationBindings
       );
 
-      return socialTriangulationProvider.call('vouch_for', { agentId });
+      return socialTriangulationProvider.call('vouch_for', { agent_address: agentId });
     },
   },
   Query: {

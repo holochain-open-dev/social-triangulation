@@ -36,7 +36,7 @@ const resolvers = {
     Mutation: {
         async vouchForAgent(_, { agentId }, { container }) {
             const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
-            return socialTriangulationProvider.call('vouch_for_agent', { agentId });
+            return socialTriangulationProvider.call('vouch_for', { agent_address: agentId });
         },
     },
     Query: {
