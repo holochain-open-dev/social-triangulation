@@ -4,7 +4,7 @@ export declare const resolvers: {
             agentId: any;
         }, { container }: {
             container: any;
-        }): Promise<any>;
+        }): Promise<boolean>;
     };
     Query: {
         minVouches(_: any, __: any, { container }: {
