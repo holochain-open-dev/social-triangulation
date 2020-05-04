@@ -97,6 +97,7 @@
   class STAgentList extends microOrchestrator.moduleConnect(litElement.LitElement) {
       constructor() {
           super(...arguments);
+          this.me = undefined;
           this.agents = undefined;
       }
       static get styles() {
@@ -112,6 +113,12 @@
           const result = await this.client.query({
               query: apolloBoost.gql `
         {
+          me {
+            id
+            username
+            vouchesCount
+            isInitialMember
+          }
           allAgents {
             id
             username
@@ -123,6 +130,7 @@
       `,
           });
           this.agents = result.data.allAgents;
+          this.me = result.data.me;
           this.minVouches = result.data.minVouches;
       }
       isAllowed(agent) {
@@ -144,15 +152,18 @@
           <span slot="secondary">${agent.id}</span>
         </mwc-list-item>
 
-        <span style="margin-right: 8px;">${agent.vouchesCount}</span>
-        ${this.isAllowed(agent)
-            ? litElement.html ``
-            : litElement.html `
-              <mwc-button
-                label="VOUCH"
-                @click=${() => this.vouchForAgent(agent.id)}
-              ></mwc-button>
-            `}
+        <span style="margin-right: 16px;">
+          ${agent.isInitialMember
+            ? 'Initial member'
+            : `Vouch count: ${agent.vouchesCount}`}
+        </span>
+        ${this.isAllowed(this.me) && !this.isAllowed(agent)
+            ? litElement.html `<mwc-button
+              style="padding-right: 16px;"
+              label="VOUCH"
+              @click=${() => this.vouchForAgent(agent.id)}
+            ></mwc-button>`
+            : litElement.html ``}
       </div>
     `;
       }
@@ -169,6 +180,10 @@
     `;
       }
   }
+  __decorate([
+      litElement.property({ type: Array }),
+      __metadata("design:type", Object)
+  ], STAgentList.prototype, "me", void 0);
   __decorate([
       litElement.property({ type: Array }),
       __metadata("design:type", Object)

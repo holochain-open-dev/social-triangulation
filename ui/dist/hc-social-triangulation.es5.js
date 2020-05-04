@@ -100,6 +100,7 @@ const VOUCH_FOR_AGENT = gql `
 class STAgentList extends moduleConnect(LitElement) {
     constructor() {
         super(...arguments);
+        this.me = undefined;
         this.agents = undefined;
     }
     static get styles() {
@@ -115,6 +116,12 @@ class STAgentList extends moduleConnect(LitElement) {
         const result = await this.client.query({
             query: gql$1 `
         {
+          me {
+            id
+            username
+            vouchesCount
+            isInitialMember
+          }
           allAgents {
             id
             username
@@ -126,6 +133,7 @@ class STAgentList extends moduleConnect(LitElement) {
       `,
         });
         this.agents = result.data.allAgents;
+        this.me = result.data.me;
         this.minVouches = result.data.minVouches;
     }
     isAllowed(agent) {
@@ -147,15 +155,18 @@ class STAgentList extends moduleConnect(LitElement) {
           <span slot="secondary">${agent.id}</span>
         </mwc-list-item>
 
-        <span style="margin-right: 8px;">${agent.vouchesCount}</span>
-        ${this.isAllowed(agent)
-            ? html ``
-            : html `
-              <mwc-button
-                label="VOUCH"
-                @click=${() => this.vouchForAgent(agent.id)}
-              ></mwc-button>
-            `}
+        <span style="margin-right: 16px;">
+          ${agent.isInitialMember
+            ? 'Initial member'
+            : `Vouch count: ${agent.vouchesCount}`}
+        </span>
+        ${this.isAllowed(this.me) && !this.isAllowed(agent)
+            ? html `<mwc-button
+              style="padding-right: 16px;"
+              label="VOUCH"
+              @click=${() => this.vouchForAgent(agent.id)}
+            ></mwc-button>`
+            : html ``}
       </div>
     `;
     }
@@ -172,6 +183,10 @@ class STAgentList extends moduleConnect(LitElement) {
     `;
     }
 }
+__decorate([
+    property({ type: Array }),
+    __metadata("design:type", Object)
+], STAgentList.prototype, "me", void 0);
 __decorate([
     property({ type: Array }),
     __metadata("design:type", Object)

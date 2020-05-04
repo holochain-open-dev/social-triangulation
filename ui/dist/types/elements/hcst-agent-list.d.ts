@@ -9,6 +9,7 @@ declare const STAgentList_base: {
     prototype: any;
 } & typeof LitElement;
 export declare class STAgentList extends STAgentList_base {
+    me: VouchedAgent | undefined;
     agents: VouchedAgent[] | undefined;
     minVouches: number;
     client: ApolloClient<any>;
