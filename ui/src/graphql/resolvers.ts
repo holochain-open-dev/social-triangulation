@@ -42,7 +42,7 @@ export const resolvers = {
 
       return settings.includes(parent.id);
     },
-    async numVouches(parent, _, { container }) {
+    async vouchesCount(parent, _, { container }) {
       const socialTriangulationProvider: HolochainProvider = container.get(
         SocialTriangulationBindings.SocialTriangulationBindings
       );

@@ -1,6 +1,5 @@
-export interface Agent {
-    id: string;
-    username: string;
-    numVouches: number;
+import { Agent } from 'holochain-profiles';
+export interface VouchedAgent extends Agent {
+    vouchesCount: number;
     isInitialMember: boolean;
 }

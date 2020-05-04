@@ -15,7 +15,7 @@ export declare const resolvers: {
         isInitialMember(parent: any, _: any, { container }: {
             container: any;
         }): Promise<boolean>;
-        numVouches(parent: any, _: any, { container }: {
+        vouchesCount(parent: any, _: any, { container }: {
             container: any;
         }): Promise<number>;
     };

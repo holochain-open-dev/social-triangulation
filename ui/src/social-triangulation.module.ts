@@ -11,6 +11,7 @@ import en from './i18n/en.json';
 import { SocialTriangulationBindings } from './bindings';
 import { socialTriangulationTypeDefs } from './graphql/schema';
 import { resolvers } from './graphql/resolvers';
+import { STAgentList } from './elements/hcst-agent-list';
 
 export class SocialTriangulationModule extends MicroModule {
   static id = 'holochain-social-triangulation-module';
@@ -32,6 +33,8 @@ export class SocialTriangulationModule extends MicroModule {
     container
       .bind(SocialTriangulationBindings.SocialTriangulationBindings)
       .to(socialTriangulationProvider);
+
+    customElements.define('hcst-agent-list', STAgentList);
   }
 
   get submodules() {
