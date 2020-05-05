@@ -109,6 +109,19 @@ class STAgentList extends moduleConnect(LitElement) {
         display: flex;
         flex-direction: row;
       }
+
+      .fill {
+        flex: 1;
+      }
+
+      .padding {
+        padding: 16px;
+      }
+
+      .center-content {
+        justify-content: center;
+        align-items: center;
+      }
     `;
     }
     async firstUpdated() {
@@ -131,13 +144,14 @@ class STAgentList extends moduleConnect(LitElement) {
           minVouches
         }
       `,
+            fetchPolicy: 'network-only',
         });
         this.agents = result.data.allAgents;
         this.me = result.data.me;
         this.minVouches = result.data.minVouches;
     }
     isAllowed(agent) {
-        return agent.isInitialMember || agent.vouchesCount > this.minVouches;
+        return agent.isInitialMember || agent.vouchesCount >= this.minVouches;
     }
     vouchForAgent(agentId) {
         this.client.mutate({
@@ -172,7 +186,9 @@ class STAgentList extends moduleConnect(LitElement) {
     }
     render() {
         if (!this.agents)
-            return html `<mwc-circular-progress></mwc-circular-progress>`;
+            return html `<div class="padding center-content row fill">
+        <mwc-circular-progress></mwc-circular-progress>
+      </div>`;
         return html `
       <mwc-list>
         ${this.agents.map((agent, i) => html `${this.renderAgent(agent)}

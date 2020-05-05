@@ -106,6 +106,19 @@
         display: flex;
         flex-direction: row;
       }
+
+      .fill {
+        flex: 1;
+      }
+
+      .padding {
+        padding: 16px;
+      }
+
+      .center-content {
+        justify-content: center;
+        align-items: center;
+      }
     `;
       }
       async firstUpdated() {
@@ -128,13 +141,14 @@
           minVouches
         }
       `,
+              fetchPolicy: 'network-only',
           });
           this.agents = result.data.allAgents;
           this.me = result.data.me;
           this.minVouches = result.data.minVouches;
       }
       isAllowed(agent) {
-          return agent.isInitialMember || agent.vouchesCount > this.minVouches;
+          return agent.isInitialMember || agent.vouchesCount >= this.minVouches;
       }
       vouchForAgent(agentId) {
           this.client.mutate({
@@ -169,7 +183,9 @@
       }
       render() {
           if (!this.agents)
-              return litElement.html `<mwc-circular-progress></mwc-circular-progress>`;
+              return litElement.html `<div class="padding center-content row fill">
+        <mwc-circular-progress></mwc-circular-progress>
+      </div>`;
           return litElement.html `
       <mwc-list>
         ${this.agents.map((agent, i) => litElement.html `${this.renderAgent(agent)}
