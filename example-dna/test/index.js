@@ -144,7 +144,7 @@ const tomConfig = Config.gen(
 // console.log(stats.errors[0].error);
 
 // orchestrator.registerScenario(
-//   "Scenario 1: Alice and Bob are Admin users and can join the DNA without vouches. Bob can not since he does n't have voucehs.",
+//   "Scenario 1: Alice and Bob are Admin users and can join the DNA without vouches. Tom can not since he does n't have voucehs.",
 
 //   async (s, t) => {
 //     const { alice, bob, tom } = await s.players(
@@ -165,7 +165,7 @@ const tomConfig = Config.gen(
 ///////////////////////////////////////////////// Test Scenario 2
 
 // orchestrator.registerScenario(
-//   "Scenario 2: Bob can join the vouches after receving 2 vouces",
+//   "Scenario 2: Bob can join the DNA after receving 2 vouces",
 //   async (s, t) => {
 //     const { alice, bob } = await s.players(
 //       { alice: aliceConfig, bob: bobConfig },
@@ -203,8 +203,35 @@ const tomConfig = Config.gen(
 //   }
 // );
 
+// orchestrator.registerScenario(
+//   "Scenario 3: Tom cannot join DAN after receving 1 vouce",
+//   async (s, t) => {
+//     const { alice, bob } = await s.players(
+//       { alice: aliceConfig, bob: bobConfig },
+//       true
+//     );
+//     const tom_address =
+//       "HcSCIcByHfX3rpbsgwnzI6MBUWW8kfnv4dvT9RTXbYxadnt7BHcPKHjQtd4gcca";
+//     var alice_vouces = await _call(
+//       alice,
+//       "vouch_for",
+//       {
+//         agent_address: tom_address,
+//       },
+//       "Alcie vouces for Tom"
+//     );
+//     await s.consistency();
+
+//     t.ok(alice_vouces.Ok);
+
+//     const tom = await s.players({ tom: tomConfig }, true);
+//     await s.consistency();
+//     console.log("tom instance by hedayat");
+//   }
+// );
+
 orchestrator.registerScenario(
-  "Scenario 2: Bob can join the vouches after receving 2 vouces",
+  "Scenario 4: Double vouches is ignored",
   async (s, t) => {
     const { alice, bob } = await s.players(
       { alice: aliceConfig, bob: bobConfig },
@@ -212,7 +239,9 @@ orchestrator.registerScenario(
     );
     const tom_address =
       "HcSCIcByHfX3rpbsgwnzI6MBUWW8kfnv4dvT9RTXbYxadnt7BHcPKHjQtd4gcca";
-    var alice_vouces = await _call(
+
+    // Alice Can Vouch Once fro Tom ************************************************
+    var alice_vouces_firstTime = await _call(
       alice,
       "vouch_for",
       {
@@ -222,11 +251,89 @@ orchestrator.registerScenario(
     );
     await s.consistency();
 
-    t.ok(alice_vouces.Ok);
+    t.ok(alice_vouces_firstTime.Ok);
 
-    const tom = await s.players({ tom: tomConfig }, true);
+    var count_vouch_1 = await _call(
+      alice,
+      "vouch_count_for",
+      { agent_address: tom_address },
+      "Number of valid vouches for Tom"
+    );
+
     await s.consistency();
-    console.log("tom instance by hedayat");
+
+    t.ok(count_vouch_1.Ok == "1");
+
+    var alice_vouces_secondTime = await _call(
+      alice,
+      "vouch_for",
+      {
+        agent_address: tom_address,
+      },
+      "Alcie vouces for Tom"
+    );
+    await s.consistency();
+
+    t.ok(alice_vouces_secondTime.Ok);
+
+    var count_vouch_2 = await _call(
+      alice,
+      "vouch_count_for",
+      { agent_address: tom_address },
+      "Number of valid vouches for Tom"
+    );
+
+    await s.consistency();
+
+    t.ok(count_vouch_2.Ok == "1");
+
+    // Bob Can Vouch Once fro Tom ************************************************
+    var Bob_vouces_firstTime = await _call(
+      bob,
+      "vouch_for",
+      {
+        agent_address: tom_address,
+      },
+      "Bob vouces for Tom"
+    );
+    await s.consistency();
+
+    t.ok(Bob_vouces_firstTime.Ok);
+
+    var count_vouch_3 = await _call(
+      bob,
+      "vouch_count_for",
+      { agent_address: tom_address },
+      "Number of valid vouches for Tom (3)"
+    );
+
+    await s.consistency();
+
+    t.ok(count_vouch_3.Ok == "2");
+
+    var bob_vouces_secondTime = await _call(
+      bob,
+      "vouch_for",
+      {
+        agent_address: tom_address,
+      },
+      "Bob vouces for Tom Second Time"
+    );
+    await s.consistency();
+
+    t.ok(bob_vouces_secondTime.Ok);
+
+    var count_vouch_4 = await _call(
+      bob,
+      "vouch_count_for",
+      { agent_address: tom_address },
+      "Number of valid vouches for Tom (4)"
+    );
+
+    await s.consistency();
+
+    t.ok(count_vouch_4.Ok == "2");
   }
 );
+
 const stats = orchestrator.run();

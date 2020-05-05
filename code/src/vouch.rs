@@ -1,6 +1,7 @@
 use hdk::holochain_core_types::time::Timeout;
 use hdk::prelude::*;
 use holochain_entry_utils::HolochainEntry;
+use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Vouch {
     pub agent_address: Address,
@@ -27,7 +28,11 @@ pub fn entry_def() -> ValidatingEntryType {
         },
         validation: |validation_data: hdk::EntryValidationData<Vouch>| {
             match validation_data {
-                EntryValidationData::Create { .. } => { // Any agent inside the DNA can vouch for others
+                EntryValidationData::Create {  entry, validation_data } => { // Any agent inside the DNA can vouch for others
+                let agent_address = validation_data.package.chain_header.provenances()[0].source();
+                    if &entry.agent_address == &agent_address {
+                        return Err(String::from("Agent can not vouch for himself"));
+                    }
                     Ok(())
                 },
                 _ => Err(String::from("Cannot update or delete a vouch")), // Vouches can not be modify or deleted
@@ -55,7 +60,13 @@ pub fn vouch_count_for_agent(agent_address: Address) -> ZomeApiResult<u8> {
         let entry_result = hdk::get_entry_result(&vouch_address, option)?;
 
         if let GetEntryResultType::Single(item) = entry_result.result {
-            let leng = item.headers.len() as u8;
+            // we query for the unique headers. To prevent double vouching by one agent.
+            let unique: HashMap<_, _> = item
+                .headers
+                .iter()
+                .map(|c| (c.provenances()[0].source(), c.entry_type()))
+                .collect();
+            let leng = unique.len() as u8;
             return Ok(leng);
         } else {
             Err(ZomeApiError::from(String::from(
