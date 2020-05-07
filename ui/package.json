@@ -1,6 +1,6 @@
 {
   "name": "holochain-social-triangulation",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1",
   "description": "MicroModule that implements social triangulation flows in holochain",
   "scripts": {
     "clean": "rimraf dist",
@@ -22,11 +22,12 @@
     "@material/mwc-switch": "^0.14.1",
     "@material/mwc-top-app-bar": "^0.14.1",
     "@uprtcl/graphql": "^0.0.7-alpha.2",
-    "@uprtcl/holochain-provider": "^0.0.7-alpha.2",
+    "@uprtcl/holochain-provider": "^0.0.7-alpha.8.2",
     "@uprtcl/micro-orchestrator": "^0.0.7-alpha.2",
     "apollo-boost": "^0.4.7",
     "graphql-tag": "^2.10.1",
     "graphql-tools": "^4.0.6",
+    "holochain-profiles": "^0.0.1",
     "inversify": "^5.0.1",
     "lit-element": "^2.2.3",
     "reflect-metadata": "^0.1.13"
@@ -63,6 +64,9 @@
     "type": "git",
     "url": "https://github.com/holochain-open-dev/profile-zome/"
   },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=10.0.0"
   }
