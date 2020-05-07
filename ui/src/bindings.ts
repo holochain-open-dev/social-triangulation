@@ -1,3 +1,4 @@
 export const SocialTriangulationBindings = {
-  SocialTriangulationBindings: "holochain-social-triangulation-provider"
+  SocialTriangulationProvider: 'holochain-social-triangulation-provider',
+  RemoteBridgeProvier: 'holochain-remote-bridge-provider',
 };

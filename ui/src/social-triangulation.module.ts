@@ -20,7 +20,7 @@ export class SocialTriangulationModule extends MicroModule {
 
   static bindings = SocialTriangulationBindings;
 
-  constructor(protected instance: string) {
+  constructor(protected instance: string, protected lobbyInstance: string) {
     super();
   }
 
@@ -29,10 +29,17 @@ export class SocialTriangulationModule extends MicroModule {
       this.instance,
       'social-triangulation'
     );
+    const lobbyProvider = createHolochainProvider(
+      this.lobbyInstance,
+      'remote-bridge'
+    );
 
     container
-      .bind(SocialTriangulationBindings.SocialTriangulationBindings)
+      .bind(SocialTriangulationBindings.SocialTriangulationProvider)
       .to(socialTriangulationProvider);
+    container
+      .bind(SocialTriangulationBindings.RemoteBridgeProvier)
+      .to(lobbyProvider);
 
     customElements.define('hcst-agent-list', STAgentList);
   }
