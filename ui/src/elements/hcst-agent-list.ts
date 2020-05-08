@@ -118,6 +118,9 @@ export class STAgentList extends moduleConnect(LitElement) {
         <mwc-circular-progress></mwc-circular-progress>
       </div>`;
 
+    if (this.agents.length === 0)
+      return html`<span>There are no registered agents in this network</span>`;
+
     return html`
       <mwc-list>
         ${this.agents.map(
