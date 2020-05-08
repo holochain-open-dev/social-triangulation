@@ -7,8 +7,8 @@ export const socialTriangulationTypeDefs = gql`
   }
 
   extend type Agent {
-    vouchesCount: Int!
-    isInitialMember: Boolean!
+    vouchesCount: Int
+    isInitialMember: Boolean
   }
 
   extend type Me {
@@ -16,6 +16,6 @@ export const socialTriangulationTypeDefs = gql`
   }
 
   extend type Query {
-    minVouches: Int!
+    minVouches: Int
   }
 `;

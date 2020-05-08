@@ -42,16 +42,29 @@ export const resolvers = {
             SocialTriangulationBindings.RemoteBridgeProvier
           );
 
+          const agentList = await connection.callAdmin('admin/agent/list', {});
+          const agentName = agentList.find((a) => a.public_address === agentId);
+
+          const interfaceList = await connection.callAdmin(
+            'admin/interface/list',
+            {}
+          );
+          const iface = interfaceList.find((i) =>
+            i.instances.find(
+              (instance) => instance.id === remoteBridgeProvider.instance
+            )
+          );
+
           const instanceResult = await connection.callAdmin(
             'admin/instance/add',
             {
               id: socialTriangulationProvider.instance,
-              agent_id: agentId,
+              agent_id: agentName.id,
               dna_id: dnaId,
             }
           );
           const bridgeResult = await connection.callAdmin('admin/bridge/add', {
-            id: bridgeId,
+            handle: bridgeId,
             caller_id: remoteBridgeProvider.instance,
             callee_id: socialTriangulationProvider.instance,
           });
@@ -59,6 +72,13 @@ export const resolvers = {
             'admin/instance/start',
             { id: socialTriangulationProvider.instance }
           );
+
+          connection.callAdmin('admin/interface/add_instance', {
+            instance_id: socialTriangulationProvider.instance,
+            interface_id: iface.id,
+          });
+          // Timeout because the add_instance call does not end
+          await new Promise((resolve) => setTimeout(() => resolve(), 300));
 
           await volunteerToBridge(container);
         } else throw new Error(e);
@@ -148,7 +168,10 @@ export async function localOrRemoteCall(
         fn_name: fnName,
         fn_args: JSON.stringify(fnArgs),
       });
-    } else throw new Error(e);
+    } else if (e.message.includes('Could not invoke the remote bridge from any node')) {
+      return null;
+    }
+    else throw new Error(e);
   }
 }
 
