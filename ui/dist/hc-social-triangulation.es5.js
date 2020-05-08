@@ -1,5 +1,5 @@
-import { HolochainConnectionModule, createHolochainProvider } from '@uprtcl/holochain-provider';
 import { ProfilesModule } from 'holochain-profiles';
+import { HolochainConnectionModule, createHolochainProvider } from '@uprtcl/holochain-provider';
 import { moduleConnect, MicroModule, i18nextModule } from '@uprtcl/micro-orchestrator';
 import { LitElement, html, property, css } from 'lit-element';
 import { gql as gql$1 } from 'apollo-boost';
@@ -14,12 +14,15 @@ var en = {
 };
 
 const SocialTriangulationBindings = {
-    SocialTriangulationBindings: "holochain-social-triangulation-provider"
+    SocialTriangulationProvider: 'holochain-social-triangulation-provider',
+    RemoteBridgeProvier: 'holochain-remote-bridge-provider',
+    BridgeId: 'holochain-remote-bridge-id',
 };
 
 const socialTriangulationTypeDefs = gql `
   extend type Mutation {
     vouchForAgent(agentId: ID!): Boolean!
+    joinNetwork(agentId: ID!): Boolean!
   }
 
   extend type Agent {
@@ -35,35 +38,80 @@ const socialTriangulationTypeDefs = gql `
 const resolvers = {
     Mutation: {
         async vouchForAgent(_, { agentId }, { container }) {
-            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
+            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationProvider);
             await socialTriangulationProvider.call('vouch_for', {
                 agent_address: agentId,
             });
             return true;
         },
+        async joinNetwork(_, { agentId }, { container }) {
+            const connection = container.get(HolochainConnectionModule.bindings.HolochainConnection);
+            try {
+                await volunteerToBridge(container);
+            }
+            catch (e) {
+                if (instanceNotValid(e)) {
+                    debugger;
+                    // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
+                    await volunteerToBridge(container);
+                }
+                else
+                    throw new Error(e);
+            }
+            return true;
+        },
     },
     Query: {
         async minVouches(_, __, { container }) {
-            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
-            const settings = await socialTriangulationProvider.call('get_setting', {});
+            const settings = await localOrRemoteCall(container, 'get_setting', {});
             return settings.split('Minimum_Required_Vouch:')[1];
         },
     },
     Agent: {
         async isInitialMember(parent, _, { container }) {
-            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
-            const settings = await socialTriangulationProvider.call('get_setting', {});
+            const settings = await localOrRemoteCall(container, 'get_setting', {});
             return settings.includes(parent.id);
         },
         async vouchesCount(parent, _, { container }) {
-            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationBindings);
-            const numVouches = await socialTriangulationProvider.call('vouch_count_for', {
+            const result = await localOrRemoteCall(container, 'vouch_count_for', {
                 agent_address: parent.id,
             });
-            return parseInt(numVouches);
+            return parseInt(result);
         },
     },
 };
+function instanceNotValid(error) {
+    return error.message.includes('instance identifier invalid: PublicInstanceIdentifier');
+}
+async function localOrRemoteCall(container, fnName, fnArgs) {
+    const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationProvider);
+    try {
+        const result = await socialTriangulationProvider.call(fnName, fnArgs);
+        return result;
+    }
+    catch (e) {
+        if (instanceNotValid(e)) {
+            const remoteBridgeProvider = container.get(SocialTriangulationBindings.RemoteBridgeProvier);
+            const bridgeId = container.get(SocialTriangulationBindings.BridgeId);
+            return remoteBridgeProvider.call('request_remote_bridge', {
+                bridge_id: bridgeId,
+                zome_name: 'social-triangulation',
+                cap_token: null,
+                fn_name: fnName,
+                fn_args: JSON.stringify(fnArgs),
+            });
+        }
+        else
+            throw new Error(e);
+    }
+}
+async function volunteerToBridge(container) {
+    const bridgeId = container.get(SocialTriangulationBindings.BridgeId);
+    const remoteBridgeProvider = container.get(SocialTriangulationBindings.RemoteBridgeProvier);
+    return remoteBridgeProvider.call('volunteer_to_bridge', {
+        bridge_id: bridgeId,
+    });
+}
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -94,6 +142,11 @@ function __metadata(metadataKey, metadataValue) {
 const VOUCH_FOR_AGENT = gql `
   mutation VouchForAgent($agentId: ID!) {
     vouchForAgent(agentId: $agentId)
+  }
+`;
+const JOIN_NETWORK = gql `
+  mutation JoinNetwork($agentId: ID!) {
+    joinNetwork(agentId: $agentId)
   }
 `;
 
@@ -213,16 +266,25 @@ __decorate([
 ], STAgentList.prototype, "minVouches", void 0);
 
 class SocialTriangulationModule extends MicroModule {
-    constructor(instance) {
+    constructor(instance, lobbyInstance, bridgeId) {
         super();
         this.instance = instance;
+        this.lobbyInstance = lobbyInstance;
+        this.bridgeId = bridgeId;
         this.dependencies = [HolochainConnectionModule.id, ProfilesModule.id];
     }
     async onLoad(container) {
         const socialTriangulationProvider = createHolochainProvider(this.instance, 'social-triangulation');
+        const lobbyProvider = createHolochainProvider(this.lobbyInstance, 'remote-bridge');
         container
-            .bind(SocialTriangulationBindings.SocialTriangulationBindings)
+            .bind(SocialTriangulationBindings.SocialTriangulationProvider)
             .to(socialTriangulationProvider);
+        container
+            .bind(SocialTriangulationBindings.BridgeId)
+            .toConstantValue(this.bridgeId);
+        container
+            .bind(SocialTriangulationBindings.RemoteBridgeProvier)
+            .to(lobbyProvider);
         customElements.define('hcst-agent-list', STAgentList);
     }
     get submodules() {
@@ -235,5 +297,5 @@ class SocialTriangulationModule extends MicroModule {
 SocialTriangulationModule.id = 'holochain-social-triangulation-module';
 SocialTriangulationModule.bindings = SocialTriangulationBindings;
 
-export { SocialTriangulationModule, VOUCH_FOR_AGENT };
+export { SocialTriangulationModule, VOUCH_FOR_AGENT, JOIN_NETWORK };
 //# sourceMappingURL=hc-social-triangulation.es5.js.map

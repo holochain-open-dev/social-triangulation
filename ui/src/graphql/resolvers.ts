@@ -23,19 +23,17 @@ export const resolvers = {
       const connection: HolochainConnection = container.get(
         HolochainConnectionModule.bindings.HolochainConnection
       );
-      const socialTriangulationProvider: HolochainProvider = container.get(
-        SocialTriangulationBindings.SocialTriangulationProvider
-      );
 
-      // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
+      try {
+        await volunteerToBridge(container);
+      } catch (e) {
+        if (instanceNotValid(e)) {
+          debugger
+          // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
 
-      const remoteBridgeProvider: HolochainProvider = container.get(
-        SocialTriangulationBindings.RemoteBridgeProvier
-      );
-
-      await remoteBridgeProvider.call('volunteer_to_bridge', {
-        dna_handle: socialTriangulationProvider.instance,
-      });
+          await volunteerToBridge(container);
+        } else throw new Error(e);
+      }
 
       return true;
     },
@@ -77,7 +75,7 @@ export function instanceNotValid(error: Error): boolean {
   );
 }
 
-export function localOrRemoteCall(
+export async function localOrRemoteCall(
   container: Container,
   fnName: string,
   fnArgs: any
@@ -87,20 +85,38 @@ export function localOrRemoteCall(
   );
 
   try {
-    return socialTriangulationProvider.call(fnName, fnArgs);
+    const result = await socialTriangulationProvider.call(fnName, fnArgs);
+    return result
   } catch (e) {
     if (instanceNotValid(e)) {
       const remoteBridgeProvider: HolochainProvider = container.get(
         SocialTriangulationBindings.RemoteBridgeProvier
       );
-
+      const bridgeId: string = container.get(
+        SocialTriangulationBindings.BridgeId
+      );
+    
       return remoteBridgeProvider.call('request_remote_bridge', {
-        dna_handle: socialTriangulationProvider.instance,
+        bridge_id: bridgeId,
         zome_name: 'social-triangulation',
         cap_token: null,
-        fn_name: 'fnName',
+        fn_name: fnName,
         fn_args: JSON.stringify(fnArgs),
       });
     } else throw new Error(e);
   }
+}
+
+async function volunteerToBridge(container: Container) {
+  const bridgeId: string = container.get(
+    SocialTriangulationBindings.BridgeId
+  );
+
+  const remoteBridgeProvider: HolochainProvider = container.get(
+    SocialTriangulationBindings.RemoteBridgeProvier
+  );
+
+  return remoteBridgeProvider.call('volunteer_to_bridge', {
+    bridge_id: bridgeId,
+  });
 }

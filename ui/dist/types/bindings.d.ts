@@ -1,3 +1,5 @@
 export declare const SocialTriangulationBindings: {
-    SocialTriangulationBindings: string;
+    SocialTriangulationProvider: string;
+    RemoteBridgeProvier: string;
+    BridgeId: string;
 };

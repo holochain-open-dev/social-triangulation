@@ -1,6 +1,12 @@
+import { Container } from 'inversify';
 export declare const resolvers: {
     Mutation: {
         vouchForAgent(_: any, { agentId }: {
+            agentId: any;
+        }, { container }: {
+            container: any;
+        }): Promise<boolean>;
+        joinNetwork(_: any, { agentId }: {
             agentId: any;
         }, { container }: {
             container: any;
@@ -20,3 +26,5 @@ export declare const resolvers: {
         }): Promise<number>;
     };
 };
+export declare function instanceNotValid(error: Error): boolean;
+export declare function localOrRemoteCall(container: Container, fnName: string, fnArgs: any): Promise<any>;

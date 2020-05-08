@@ -20,7 +20,11 @@ export class SocialTriangulationModule extends MicroModule {
 
   static bindings = SocialTriangulationBindings;
 
-  constructor(protected instance: string, protected lobbyInstance: string) {
+  constructor(
+    protected instance: string,
+    protected lobbyInstance: string,
+    protected bridgeId: string
+  ) {
     super();
   }
 
@@ -37,6 +41,9 @@ export class SocialTriangulationModule extends MicroModule {
     container
       .bind(SocialTriangulationBindings.SocialTriangulationProvider)
       .to(socialTriangulationProvider);
+    container
+      .bind(SocialTriangulationBindings.BridgeId)
+      .toConstantValue(this.bridgeId);
     container
       .bind(SocialTriangulationBindings.RemoteBridgeProvier)
       .to(lobbyProvider);
