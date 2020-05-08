@@ -95,6 +95,7 @@ export const resolvers = {
         'get_setting',
         {}
       );
+      if (settings === null) return null;
 
       return settings.split('Minimum_Required_Vouch:')[1];
     },
@@ -122,12 +123,16 @@ export const resolvers = {
         {}
       );
 
+      if (settings === null) return null;
+
       return settings.includes(parent.id);
     },
     async vouchesCount(parent, _, { container }) {
       const result = await localOrRemoteCall(container, 'vouch_count_for', {
         agent_address: parent.id,
       });
+
+      if (result === null) return null;
 
       return parseInt(result);
     },
@@ -161,17 +166,27 @@ export async function localOrRemoteCall(
         SocialTriangulationBindings.BridgeId
       );
 
-      return remoteBridgeProvider.call('request_remote_bridge', {
-        bridge_id: bridgeId,
-        zome_name: 'social-triangulation',
-        cap_token: null,
-        fn_name: fnName,
-        fn_args: JSON.stringify(fnArgs),
-      });
-    } else if (e.message.includes('Could not invoke the remote bridge from any node')) {
-      return null;
-    }
-    else throw new Error(e);
+      try {
+        const remoteResult = await remoteBridgeProvider.call(
+          'request_remote_bridge',
+          {
+            bridge_id: bridgeId,
+            zome_name: 'social-triangulation',
+            cap_token: null,
+            fn_name: fnName,
+            fn_args: JSON.stringify(fnArgs),
+          }
+        );
+        return remoteResult;
+      } catch (e) {
+        if (
+          e.message &&
+          e.message.includes('Could not invoke the remote bridge from any node')
+        ) {
+          return null;
+        } else throw new Error(e);
+      }
+    } else throw new Error(e);
   }
 }
 
