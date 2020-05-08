@@ -5,6 +5,7 @@ import {
 } from '@uprtcl/holochain-provider';
 
 import { SocialTriangulationBindings } from '../bindings';
+import { Container } from 'inversify';
 
 export const resolvers = {
   Mutation: {
@@ -41,11 +42,8 @@ export const resolvers = {
   },
   Query: {
     async minVouches(_, __, { container }) {
-      const socialTriangulationProvider: HolochainProvider = container.get(
-        SocialTriangulationBindings.SocialTriangulationProvider
-      );
-
-      const settings: string = await socialTriangulationProvider.call(
+      const settings: string = await localOrRemoteCall(
+        container,
         'get_setting',
         {}
       );
@@ -55,11 +53,8 @@ export const resolvers = {
   },
   Agent: {
     async isInitialMember(parent, _, { container }) {
-      const socialTriangulationProvider: HolochainProvider = container.get(
-        SocialTriangulationBindings.SocialTriangulationProvider
-      );
-
-      const settings: string = await socialTriangulationProvider.call(
+      const settings: string = await localOrRemoteCall(
+        container,
         'get_setting',
         {}
       );
@@ -67,38 +62,11 @@ export const resolvers = {
       return settings.includes(parent.id);
     },
     async vouchesCount(parent, _, { container }) {
-      const socialTriangulationProvider: HolochainProvider = container.get(
-        SocialTriangulationBindings.SocialTriangulationProvider
-      );
+      const result = await localOrRemoteCall(container, 'vouch_count_for', {
+        agent_address: parent.id,
+      });
 
-      try {
-        const numVouches = await socialTriangulationProvider.call(
-          'vouch_count_for',
-          {
-            agent_address: parent.id,
-          }
-        );
-        return parseInt(numVouches);
-      } catch (e) {
-        if (instanceNotValid(e)) {
-          const remoteBridgeProvider: HolochainProvider = container.get(
-            SocialTriangulationBindings.RemoteBridgeProvier
-          );
-
-          const result = await remoteBridgeProvider.call(
-            'request_remote_bridge',
-            {
-              dna_handle: socialTriangulationProvider.instance,
-              zome_name: 'social-triangulation',
-              cap_token: null,
-              fn_name: 'vouch_count_for',
-              fn_args: JSON.stringify({ agent_address: parent.id }),
-            }
-          );
-          debugger;
-          return parseInt(result);
-        } else throw new Error(e);
-      }
+      return parseInt(result);
     },
   },
 };
@@ -107,4 +75,32 @@ export function instanceNotValid(error: Error): boolean {
   return error.message.includes(
     'instance identifier invalid: PublicInstanceIdentifier'
   );
+}
+
+export function localOrRemoteCall(
+  container: Container,
+  fnName: string,
+  fnArgs: any
+): Promise<any> {
+  const socialTriangulationProvider: HolochainProvider = container.get(
+    SocialTriangulationBindings.SocialTriangulationProvider
+  );
+
+  try {
+    return socialTriangulationProvider.call(fnName, fnArgs);
+  } catch (e) {
+    if (instanceNotValid(e)) {
+      const remoteBridgeProvider: HolochainProvider = container.get(
+        SocialTriangulationBindings.RemoteBridgeProvier
+      );
+
+      return remoteBridgeProvider.call('request_remote_bridge', {
+        dna_handle: socialTriangulationProvider.instance,
+        zome_name: 'social-triangulation',
+        cap_token: null,
+        fn_name: 'fnName',
+        fn_args: JSON.stringify(fnArgs),
+      });
+    } else throw new Error(e);
+  }
 }
