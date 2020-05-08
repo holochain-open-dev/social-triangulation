@@ -47,18 +47,28 @@
           },
           async joinNetwork(_, { agentId }, { container }) {
               const connection = container.get(holochainProvider.HolochainConnectionModule.bindings.HolochainConnection);
+              const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationProvider);
               try {
-                  await volunteerToBridge(container);
+                  // Just seeing if we already have the social triangulation DNA installed
+                  await socialTriangulationProvider.call('get_setting', {});
               }
               catch (e) {
                   if (instanceNotValid(e)) {
-                      debugger;
-                      // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
+                      const bridgeId = container.get(SocialTriangulationBindings.BridgeId);
+                      const remoteBridgeProvider = container.get(SocialTriangulationBindings.RemoteBridgeProvier);
+                      const instanceResult = await connection.callAdmin('admin/instance/add', { id: socialTriangulationProvider.instance, agent_id: agentId });
+                      const bridgeResult = await connection.callAdmin('admin/bridge/add', {
+                          id: bridgeId,
+                          caller_id: remoteBridgeProvider.instance,
+                          callee_id: socialTriangulationProvider.instance,
+                      });
+                      const startResult = await connection.callAdmin('admin/instance/start', { id: socialTriangulationProvider.instance });
                       await volunteerToBridge(container);
                   }
                   else
                       throw new Error(e);
               }
+              await volunteerToBridge(container);
               return true;
           },
       },
@@ -246,7 +256,7 @@
             ? 'Initial member'
             : `Vouch count: ${agent.vouchesCount}`}
         </span>
-        ${this.isAllowed(this.me) && !this.isAllowed(agent)
+        ${!this.isAllowed(agent)
             ? litElement.html `<mwc-button
               style="padding-right: 16px;"
               label="VOUCH"
@@ -261,6 +271,8 @@
               return litElement.html `<div class="padding center-content row fill">
         <mwc-circular-progress></mwc-circular-progress>
       </div>`;
+          if (this.agents.length === 0)
+              return litElement.html `<span>There are no registered agents in this network</span>`;
           return litElement.html `
       <mwc-list>
         ${this.agents.map((agent, i) => litElement.html `${this.renderAgent(agent)}

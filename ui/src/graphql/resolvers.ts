@@ -23,17 +23,40 @@ export const resolvers = {
       const connection: HolochainConnection = container.get(
         HolochainConnectionModule.bindings.HolochainConnection
       );
+      const socialTriangulationProvider: HolochainProvider = container.get(
+        SocialTriangulationBindings.SocialTriangulationProvider
+      );
 
       try {
-        await volunteerToBridge(container);
+        // Just seeing if we already have the social triangulation DNA installed
+        await socialTriangulationProvider.call('get_setting', {});
       } catch (e) {
         if (instanceNotValid(e)) {
-          debugger;
-          // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
+          const bridgeId: string = container.get(
+            SocialTriangulationBindings.BridgeId
+          );
+          const remoteBridgeProvider: HolochainProvider = container.get(
+            SocialTriangulationBindings.RemoteBridgeProvier
+          );
+
+          const instanceResult = await connection.callAdmin(
+            'admin/instance/add',
+            { id: socialTriangulationProvider.instance, agent_id: agentId }
+          );
+          const bridgeResult = await connection.callAdmin('admin/bridge/add', {
+            id: bridgeId,
+            caller_id: remoteBridgeProvider.instance,
+            callee_id: socialTriangulationProvider.instance,
+          });
+          const startResult = await connection.callAdmin(
+            'admin/instance/start',
+            { id: socialTriangulationProvider.instance }
+          );
 
           await volunteerToBridge(container);
         } else throw new Error(e);
       }
+      await volunteerToBridge(container);
 
       return true;
     },
