@@ -30,6 +30,10 @@ const socialTriangulationTypeDefs = gql `
     isInitialMember: Boolean!
   }
 
+  extend type Me {
+    hasJoined: Boolean!
+  }
+
   extend type Query {
     minVouches: Int!
   }
@@ -65,6 +69,21 @@ const resolvers = {
         async minVouches(_, __, { container }) {
             const settings = await localOrRemoteCall(container, 'get_setting', {});
             return settings.split('Minimum_Required_Vouch:')[1];
+        },
+    },
+    Me: {
+        async hasJoined(_, __, { container }) {
+            const socialTriangulationProvider = container.get(SocialTriangulationBindings.SocialTriangulationProvider);
+            try {
+                await socialTriangulationProvider.call('get_setting', {});
+                return true;
+            }
+            catch (e) {
+                if (instanceNotValid(e))
+                    return false;
+                else
+                    throw new Error(e);
+            }
         },
     },
     Agent: {
@@ -184,9 +203,12 @@ class STAgentList extends moduleConnect(LitElement) {
         {
           me {
             id
-            username
-            vouchesCount
-            isInitialMember
+            agent {
+              id
+              username
+              vouchesCount
+              isInitialMember
+            }
           }
           allAgents {
             id

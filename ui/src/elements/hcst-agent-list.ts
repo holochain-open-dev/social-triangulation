@@ -51,9 +51,12 @@ export class STAgentList extends moduleConnect(LitElement) {
         {
           me {
             id
-            username
-            vouchesCount
-            isInitialMember
+            agent {
+              id
+              username
+              vouchesCount
+              isInitialMember
+            }
           }
           allAgents {
             id

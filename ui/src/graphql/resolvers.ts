@@ -28,7 +28,7 @@ export const resolvers = {
         await volunteerToBridge(container);
       } catch (e) {
         if (instanceNotValid(e)) {
-          debugger
+          debugger;
           // const result = await connection.callAdmin('admin/instance/add', {id: 'mutual-credit-instance', agent_id: agentId, });
 
           await volunteerToBridge(container);
@@ -47,6 +47,21 @@ export const resolvers = {
       );
 
       return settings.split('Minimum_Required_Vouch:')[1];
+    },
+  },
+  Me: {
+    async hasJoined(_, __, { container }) {
+      const socialTriangulationProvider: HolochainProvider = container.get(
+        SocialTriangulationBindings.SocialTriangulationProvider
+      );
+
+      try {
+        await socialTriangulationProvider.call('get_setting', {});
+        return true;
+      } catch (e) {
+        if (instanceNotValid(e)) return false;
+        else throw new Error(e);
+      }
     },
   },
   Agent: {
@@ -86,7 +101,7 @@ export async function localOrRemoteCall(
 
   try {
     const result = await socialTriangulationProvider.call(fnName, fnArgs);
-    return result
+    return result;
   } catch (e) {
     if (instanceNotValid(e)) {
       const remoteBridgeProvider: HolochainProvider = container.get(
@@ -95,7 +110,7 @@ export async function localOrRemoteCall(
       const bridgeId: string = container.get(
         SocialTriangulationBindings.BridgeId
       );
-    
+
       return remoteBridgeProvider.call('request_remote_bridge', {
         bridge_id: bridgeId,
         zome_name: 'social-triangulation',
@@ -108,9 +123,7 @@ export async function localOrRemoteCall(
 }
 
 async function volunteerToBridge(container: Container) {
-  const bridgeId: string = container.get(
-    SocialTriangulationBindings.BridgeId
-  );
+  const bridgeId: string = container.get(SocialTriangulationBindings.BridgeId);
 
   const remoteBridgeProvider: HolochainProvider = container.get(
     SocialTriangulationBindings.RemoteBridgeProvier

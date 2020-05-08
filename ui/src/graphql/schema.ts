@@ -11,6 +11,10 @@ export const socialTriangulationTypeDefs = gql`
     isInitialMember: Boolean!
   }
 
+  extend type Me {
+    hasJoined: Boolean!
+  }
+
   extend type Query {
     minVouches: Int!
   }

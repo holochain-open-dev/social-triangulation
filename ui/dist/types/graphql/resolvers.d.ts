@@ -17,6 +17,11 @@ export declare const resolvers: {
             container: any;
         }): Promise<string>;
     };
+    Me: {
+        hasJoined(_: any, __: any, { container }: {
+            container: any;
+        }): Promise<boolean>;
+    };
     Agent: {
         isInitialMember(parent: any, _: any, { container }: {
             container: any;
