@@ -101,7 +101,7 @@ export class STAgentList extends moduleConnect(LitElement) {
             ? 'Initial member'
             : `Vouch count: ${agent.vouchesCount}`}
         </span>
-        ${this.isAllowed(this.me as VouchedAgent) && !this.isAllowed(agent)
+        ${!this.isAllowed(agent)
           ? html`<mwc-button
               style="padding-right: 16px;"
               label="VOUCH"
