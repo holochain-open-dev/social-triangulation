@@ -22,6 +22,7 @@ export class SocialTriangulationModule extends MicroModule {
 
   constructor(
     protected instance: string,
+    protected dnaId: string,
     protected lobbyInstance: string,
     protected bridgeId: string
   ) {
@@ -41,7 +42,10 @@ export class SocialTriangulationModule extends MicroModule {
     container
       .bind(SocialTriangulationBindings.SocialTriangulationProvider)
       .to(socialTriangulationProvider);
-    container
+      container
+      .bind(SocialTriangulationBindings.DnaId)
+      .toConstantValue(this.dnaId);
+      container
       .bind(SocialTriangulationBindings.BridgeId)
       .toConstantValue(this.bridgeId);
     container

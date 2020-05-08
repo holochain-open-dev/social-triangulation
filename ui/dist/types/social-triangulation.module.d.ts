@@ -3,6 +3,7 @@ import { GraphQlSchemaModule } from '@uprtcl/graphql';
 import { MicroModule, i18nextModule } from '@uprtcl/micro-orchestrator';
 export declare class SocialTriangulationModule extends MicroModule {
     protected instance: string;
+    protected dnaId: string;
     protected lobbyInstance: string;
     protected bridgeId: string;
     static id: string;
@@ -11,8 +12,9 @@ export declare class SocialTriangulationModule extends MicroModule {
         SocialTriangulationProvider: string;
         RemoteBridgeProvier: string;
         BridgeId: string;
+        DnaId: string;
     };
-    constructor(instance: string, lobbyInstance: string, bridgeId: string);
+    constructor(instance: string, dnaId: string, lobbyInstance: string, bridgeId: string);
     onLoad(container: interfaces.Container): Promise<void>;
     get submodules(): (GraphQlSchemaModule | i18nextModule)[];
 }

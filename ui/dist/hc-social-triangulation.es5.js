@@ -17,6 +17,7 @@ const SocialTriangulationBindings = {
     SocialTriangulationProvider: 'holochain-social-triangulation-provider',
     RemoteBridgeProvier: 'holochain-remote-bridge-provider',
     BridgeId: 'holochain-remote-bridge-id',
+    DnaId: 'holochain-social-triangulation-dna-id',
 };
 
 const socialTriangulationTypeDefs = gql `
@@ -58,8 +59,13 @@ const resolvers = {
             catch (e) {
                 if (instanceNotValid(e)) {
                     const bridgeId = container.get(SocialTriangulationBindings.BridgeId);
+                    const dnaId = container.get(SocialTriangulationBindings.DnaId);
                     const remoteBridgeProvider = container.get(SocialTriangulationBindings.RemoteBridgeProvier);
-                    const instanceResult = await connection.callAdmin('admin/instance/add', { id: socialTriangulationProvider.instance, agent_id: agentId });
+                    const instanceResult = await connection.callAdmin('admin/instance/add', {
+                        id: socialTriangulationProvider.instance,
+                        agent_id: agentId,
+                        dna_id: dnaId,
+                    });
                     const bridgeResult = await connection.callAdmin('admin/bridge/add', {
                         id: bridgeId,
                         caller_id: remoteBridgeProvider.instance,
@@ -300,9 +306,10 @@ __decorate([
 ], STAgentList.prototype, "minVouches", void 0);
 
 class SocialTriangulationModule extends MicroModule {
-    constructor(instance, lobbyInstance, bridgeId) {
+    constructor(instance, dnaId, lobbyInstance, bridgeId) {
         super();
         this.instance = instance;
+        this.dnaId = dnaId;
         this.lobbyInstance = lobbyInstance;
         this.bridgeId = bridgeId;
         this.dependencies = [HolochainConnectionModule.id, ProfilesModule.id];
@@ -313,6 +320,9 @@ class SocialTriangulationModule extends MicroModule {
         container
             .bind(SocialTriangulationBindings.SocialTriangulationProvider)
             .to(socialTriangulationProvider);
+        container
+            .bind(SocialTriangulationBindings.DnaId)
+            .toConstantValue(this.dnaId);
         container
             .bind(SocialTriangulationBindings.BridgeId)
             .toConstantValue(this.bridgeId);

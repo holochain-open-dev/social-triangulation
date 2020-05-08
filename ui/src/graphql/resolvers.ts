@@ -35,13 +35,20 @@ export const resolvers = {
           const bridgeId: string = container.get(
             SocialTriangulationBindings.BridgeId
           );
+          const dnaId: string = container.get(
+            SocialTriangulationBindings.DnaId
+          );
           const remoteBridgeProvider: HolochainProvider = container.get(
             SocialTriangulationBindings.RemoteBridgeProvier
           );
 
           const instanceResult = await connection.callAdmin(
             'admin/instance/add',
-            { id: socialTriangulationProvider.instance, agent_id: agentId }
+            {
+              id: socialTriangulationProvider.instance,
+              agent_id: agentId,
+              dna_id: dnaId,
+            }
           );
           const bridgeResult = await connection.callAdmin('admin/bridge/add', {
             id: bridgeId,
