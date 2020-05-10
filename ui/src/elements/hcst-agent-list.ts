@@ -8,11 +8,11 @@ import '@material/mwc-list';
 import { Dialog } from '@material/mwc-dialog';
 import '@material/mwc-list/mwc-list-item';
 import { VouchedAgent } from '../types';
-import { VOUCH_FOR_AGENT } from '../graphql/queries';
+import { VOUCH_FOR_AGENT, GET_ALL_VOUCHED_AGENTS } from '../graphql/queries';
 
 export class STAgentList extends moduleConnect(LitElement) {
   @property({ type: Array })
-  me: VouchedAgent | undefined = undefined;
+  meHasJoined!: boolean;
 
   @property({ type: Array })
   agents: Array<VouchedAgent & { vouching?: boolean }> | undefined = undefined;
@@ -53,34 +53,28 @@ export class STAgentList extends moduleConnect(LitElement) {
   async firstUpdated() {
     this.client = this.request(ApolloClientModule.bindings.Client);
 
+    const result = await this.client.query({
+      query: gql`
+        {
+          me {
+            id
+            hasJoined
+          }
+          minVouches
+        }
+      `,
+      fetchPolicy: 'network-only',
+    });
+    this.meHasJoined = result.data.me.hasJoined;
+    this.minVouches = result.data.minVouches;
+
     this.client
       .watchQuery({
-        query: gql`
-          {
-            me {
-              id
-              agent {
-                id
-                username
-                vouchesCount
-                isInitialMember
-              }
-            }
-            allAgents {
-              id
-              username
-              vouchesCount
-              isInitialMember
-            }
-            minVouches
-          }
-        `,
+        query: GET_ALL_VOUCHED_AGENTS,
         fetchPolicy: 'network-only',
       })
       .subscribe((result) => {
         this.agents = result.data.allAgents;
-        this.me = result.data.me;
-        this.minVouches = result.data.minVouches;
       });
   }
 
@@ -104,18 +98,8 @@ export class STAgentList extends moduleConnect(LitElement) {
         agentId: agent.id,
       },
       update: (cache, result) => {
-        const query = gql`
-          {
-            allAgents {
-              id
-              username
-              vouchesCount
-              isInitialMember
-            }
-          }
-        `;
         const data: any = cache.readQuery({
-          query,
+          query: GET_ALL_VOUCHED_AGENTS,
         });
 
         const agentIndex = data.allAgents.findIndex((a) => a.id === agent.id);
@@ -123,7 +107,7 @@ export class STAgentList extends moduleConnect(LitElement) {
         data.allAgents[agentIndex].vouchesCount++;
 
         cache.writeQuery({
-          query,
+          query: GET_ALL_VOUCHED_AGENTS,
           data,
         });
       },
@@ -131,7 +115,7 @@ export class STAgentList extends moduleConnect(LitElement) {
 
     this.dispatchEvent(
       new CustomEvent('vouched-for-agent', {
-        detail: { agentId: agent.id },
+        detail: { agent },
         bubbles: true,
         composed: true,
       })
@@ -153,10 +137,11 @@ export class STAgentList extends moduleConnect(LitElement) {
   renderAgentAction(agent: VouchedAgent & { vouching?: boolean }) {
     if (agent.vouching)
       return html`<mwc-circular-progress></mwc-circular-progress>`;
-    else if (!this.hasJoined(agent))
+    else if (!this.hasJoined(agent) && this.meHasJoined)
       return html`<mwc-button
         style="padding-right: 16px;"
         label="VOUCH"
+        outlined
         @click=${() => {
           this.selectedAgent = agent;
 
@@ -173,8 +158,10 @@ export class STAgentList extends moduleConnect(LitElement) {
       <mwc-dialog id="confirm-dialog" heading="Confirm vouch">
         <span>
           Are you sure you want to vouch for
-          @${(this.selectedAgent as VouchedAgent).username} to be able to join
-          the network?
+          @${this.selectedAgent
+            ? (this.selectedAgent as VouchedAgent).username
+            : ''}
+          to be able to join the network?
         </span>
         <mwc-button slot="secondaryAction" dialogAction="cancel">
           Cancel
@@ -194,7 +181,7 @@ export class STAgentList extends moduleConnect(LitElement) {
     return html`
       <div class="row" style="align-items: center;">
         <mwc-list-item style="flex: 1;" twoline noninteractive>
-          <span>${agent.username}</span>
+          <span>@${agent.username}</span>
           <span slot="secondary">${agent.id}</span>
         </mwc-list-item>
 
@@ -226,9 +213,12 @@ export class STAgentList extends moduleConnect(LitElement) {
     const agents = this.getAgents();
 
     if (agents.length === 0)
-      return html`<span>${this.getEmptyPlaceholder()}</span>`;
+      return html`<div class="padding center-content row fill">
+        <span>${this.getEmptyPlaceholder()}</span>
+      </div>`;
 
     return html`
+      ${this.renderConfirmVouch()}
       <mwc-list>
         ${agents.map(
           (agent, i) => html`${this.renderAgent(agent)}
