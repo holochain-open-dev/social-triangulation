@@ -68,10 +68,6 @@ export const resolvers = {
             caller_id: remoteBridgeProvider.instance,
             callee_id: socialTriangulationProvider.instance,
           });
-          const startResult = await connection.callAdmin(
-            'admin/instance/start',
-            { id: socialTriangulationProvider.instance }
-          );
 
           connection.callAdmin('admin/interface/add_instance', {
             instance_id: socialTriangulationProvider.instance,
@@ -79,6 +75,10 @@ export const resolvers = {
           });
           // Timeout because the add_instance call does not end
           await new Promise((resolve) => setTimeout(() => resolve(), 300));
+          const startResult = await connection.callAdmin(
+            'admin/instance/start',
+            { id: socialTriangulationProvider.instance }
+          );
 
           await volunteerToBridge(container);
         } else throw new Error(e);
