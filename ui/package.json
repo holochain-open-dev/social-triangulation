@@ -1,6 +1,6 @@
 {
   "name": "holochain-social-triangulation",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "MicroModule that implements social triangulation flows in holochain",
   "scripts": {
     "clean": "rimraf dist",
