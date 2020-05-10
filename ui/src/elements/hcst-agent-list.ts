@@ -180,9 +180,10 @@ export class STAgentList extends moduleConnect(LitElement) {
   renderAgent(agent: VouchedAgent) {
     return html`
       <div class="row" style="align-items: center;">
-        <mwc-list-item style="flex: 1;" twoline noninteractive>
+        <mwc-list-item style="flex: 1;" twoline noninteractive graphic="avatar">
           <span>@${agent.username}</span>
           <span slot="secondary">${agent.id}</span>
+          <mwc-icon slot="graphic">emoji_people</mwc-icon>
         </mwc-list-item>
 
         <span style="margin-right: 16px;">
@@ -214,7 +215,7 @@ export class STAgentList extends moduleConnect(LitElement) {
 
     if (agents.length === 0)
       return html`<div class="padding center-content row fill">
-        <span>${this.getEmptyPlaceholder()}</span>
+        <span style="opacity: 0.7;">${this.getEmptyPlaceholder()}</span>
       </div>`;
 
     return html`
