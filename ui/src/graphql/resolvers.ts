@@ -44,7 +44,11 @@ export const resolvers = {
         options.dnaId,
         socialTriangulationProvider.instance,
         options.templateDnaAddress,
-        options.properties
+        options.properties,
+        (interfaces) =>
+          interfaces.find((iface) =>
+            iface.instances.find((i) => i.id === remoteBridgeProvider.instance)
+          )
       );
 
       const bridgeResult = await connection.callAdmin('admin/bridge/add', {
