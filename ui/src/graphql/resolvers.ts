@@ -6,6 +6,7 @@ import {
 
 import { SocialTriangulationBindings } from '../bindings';
 import { Container } from 'inversify';
+import { SocialTriangulationOptions } from '../types';
 
 export const resolvers = {
   Mutation: {
@@ -26,63 +27,32 @@ export const resolvers = {
       const socialTriangulationProvider: HolochainProvider = container.get(
         SocialTriangulationBindings.SocialTriangulationProvider
       );
+      const options: SocialTriangulationOptions = container.get(
+        SocialTriangulationBindings.SocialTriangulationOptions
+      );
 
-      try {
-        // Just seeing if we already have the social triangulation DNA installed
-        await socialTriangulationProvider.call('get_setting', {});
-      } catch (e) {
-        if (instanceNotValid(e)) {
-          const bridgeId: string = container.get(
-            SocialTriangulationBindings.BridgeId
-          );
-          const dnaId: string = container.get(
-            SocialTriangulationBindings.DnaId
-          );
-          const remoteBridgeProvider: HolochainProvider = container.get(
-            SocialTriangulationBindings.RemoteBridgeProvier
-          );
+      const bridgeId: string = container.get(
+        SocialTriangulationBindings.BridgeId
+      );
+      const remoteBridgeProvider: HolochainProvider = container.get(
+        SocialTriangulationBindings.RemoteBridgeProvier
+      );
+      const agentConfig = await connection.getAgentConfig(agentId);
 
-          const agentList = await connection.callAdmin('admin/agent/list', {});
-          const agentName = agentList.find((a) => a.public_address === agentId);
+      await connection.cloneDna(
+        agentConfig.id,
+        options.dnaId,
+        socialTriangulationProvider.instance,
+        options.templateDnaAddress,
+        options.properties
+      );
 
-          const interfaceList = await connection.callAdmin(
-            'admin/interface/list',
-            {}
-          );
-          const iface = interfaceList.find((i) =>
-            i.instances.find(
-              (instance) => instance.id === remoteBridgeProvider.instance
-            )
-          );
+      const bridgeResult = await connection.callAdmin('admin/bridge/add', {
+        handle: bridgeId,
+        caller_id: remoteBridgeProvider.instance,
+        callee_id: socialTriangulationProvider.instance,
+      });
 
-          const instanceResult = await connection.callAdmin(
-            'admin/instance/add',
-            {
-              id: socialTriangulationProvider.instance,
-              agent_id: agentName.id,
-              dna_id: dnaId,
-            }
-          );
-          const bridgeResult = await connection.callAdmin('admin/bridge/add', {
-            handle: bridgeId,
-            caller_id: remoteBridgeProvider.instance,
-            callee_id: socialTriangulationProvider.instance,
-          });
-
-          connection.callAdmin('admin/interface/add_instance', {
-            instance_id: socialTriangulationProvider.instance,
-            interface_id: iface.id,
-          });
-          // Timeout because the add_instance call does not end
-          await new Promise((resolve) => setTimeout(() => resolve(), 300));
-          const startResult = await connection.callAdmin(
-            'admin/instance/start',
-            { id: socialTriangulationProvider.instance }
-          );
-
-          await volunteerToBridge(container);
-        } else throw new Error(e);
-      }
       await volunteerToBridge(container);
 
       return true;
@@ -90,14 +60,10 @@ export const resolvers = {
   },
   Query: {
     async minVouches(_, __, { container }) {
-      const settings: string = await localOrRemoteCall(
-        container,
-        'get_setting',
-        {}
+      const options: SocialTriangulationOptions = container.get(
+        SocialTriangulationBindings.SocialTriangulationOptions
       );
-      if (settings === null) return null;
-
-      return settings.split('Minimum_Required_Vouch:')[1];
+      return options.properties.necessary_vouches;
     },
   },
   Me: {
@@ -117,15 +83,10 @@ export const resolvers = {
   },
   Agent: {
     async isInitialMember(parent, _, { container }) {
-      const settings: string = await localOrRemoteCall(
-        container,
-        'get_setting',
-        {}
+      const options: SocialTriangulationOptions = container.get(
+        SocialTriangulationBindings.SocialTriangulationOptions
       );
-
-      if (settings === null) return null;
-
-      return settings.includes(parent.id);
+      return options.properties.initial_members.includes(parent.id);
     },
     async vouchesCount(parent, _, { container }) {
       const result = await localOrRemoteCall(container, 'vouch_count_for', {
