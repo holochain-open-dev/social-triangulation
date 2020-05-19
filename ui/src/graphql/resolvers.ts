@@ -57,8 +57,6 @@ export const resolvers = {
         callee_id: socialTriangulationProvider.instance,
       });
 
-      await volunteerToBridge(container);
-
       return true;
     },
   },
