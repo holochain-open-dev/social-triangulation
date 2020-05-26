@@ -11,3 +11,14 @@ export const JOIN_NETWORK = gql`
     joinNetwork(agentId: $agentId)
   }
 `;
+
+export const GET_ALL_VOUCHED_AGENTS = gql`
+  {
+    allAgents {
+      id
+      username
+      vouchesCount
+      isInitialMember
+    }
+  }
+`;
