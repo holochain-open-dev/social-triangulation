@@ -1,6 +1,7 @@
 #![feature(proc_macro_hygiene)]
 extern crate hdk;
 extern crate hdk_proc_macros;
+extern crate holochain_entry_utils;
 extern crate holochain_json_derive;
 extern crate serde;
 extern crate serde_derive;
@@ -20,6 +21,7 @@ mod social_triangulation_zome {
     use hdk::holochain_core_types::time::Timeout;
     use hdk::prelude::*;
     use hdk::AGENT_ADDRESS;
+    use holochain_entry_utils::HolochainEntry;
 
     #[init]
     fn init() {

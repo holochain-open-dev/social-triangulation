@@ -1,5 +1,6 @@
 use hdk::holochain_core_types::time::Timeout;
 use hdk::prelude::*;
+use holochain_entry_utils::HolochainEntry;
 use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Vouch {
@@ -10,11 +11,13 @@ impl Vouch {
     pub fn new(agent_address: Address) -> Self {
         Self { agent_address }
     }
-    pub fn entry_type() -> String {
+}
+
+impl HolochainEntry for Vouch {
+    fn entry_type() -> String {
         String::from("vouch")
     }
 }
-
 pub fn entry_def() -> ValidatingEntryType {
     entry!(
         name: Vouch::entry_type(),
